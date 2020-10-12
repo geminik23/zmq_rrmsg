@@ -1,0 +1,11 @@
+[package]
+name = "zmq_rrmsg"
+version = "0.1.0"
+authors = ["Jaemin Kim <geminik23@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+zmq="0.9"
+log="0.4"
