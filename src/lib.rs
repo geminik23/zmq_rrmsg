@@ -29,18 +29,18 @@ impl Default for MessageFormat{
 
 #[derive(Default, Debug)]
 pub struct MsgMetadata{
-    identity:Option<Vec<u8>>,
+    pub identity:Option<Vec<u8>>,
     // empty 
-    version:String,
-    uid:Vec<u8>,
-    cmd:RRMessageCommand,
+    pub version:String,
+    pub uid:Vec<u8>,
+    pub cmd:RRMessageCommand,
 }
 
 #[derive(Default, Debug)]
 pub struct MsgContent{
-    target:Option<String>,
-    format:MessageFormat,
-    content:Vec<u8>,
+    pub target:Option<String>,
+    pub format:MessageFormat,
+    pub content:Vec<u8>,
 }
 
 #[derive(Debug)]
