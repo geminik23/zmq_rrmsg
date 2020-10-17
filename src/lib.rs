@@ -55,24 +55,24 @@ pub enum RRMessage{
 
 pub struct RRMsgHandler;
 impl RRMsgHandler{
-    pub fn create_ready(id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>, target:Option<String>)->Option<RRMessage>{
-        Self::build_rrmsg(RRMessageCommand::READY, id, version, msgid, target, None)
+    pub fn create_ready(version:String, msgid:Option<Vec<u8>>, target:Option<String>)->Option<RRMessage>{
+        Self::build_rrmsg(RRMessageCommand::READY, None, version, msgid, target, None)
     }
 
     pub fn create_okay(id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>)->Option<RRMessage>{
         Self::build_rrmsg(RRMessageCommand::OKAY, id, version, msgid, None, None)
     }
 
-    pub fn create_disconnect(id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>)->Option<RRMessage>{
-        Self::build_rrmsg(RRMessageCommand::DISCONNECT, id, version, msgid, None,None)
+    pub fn create_disconnect(version:String, msgid:Option<Vec<u8>>)->Option<RRMessage>{
+        Self::build_rrmsg(RRMessageCommand::DISCONNECT, None, version, msgid, None,None)
     }
 
     pub fn create_heartbeat(id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>)->Option<RRMessage>{
         Self::build_rrmsg(RRMessageCommand::HEARTBEAT, id, version, msgid, None, None)
     }
 
-    pub fn create_request(id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>, target:Option<String>, format:MessageFormat, content:Vec<u8>)->Option<RRMessage>{
-        Self::build_rrmsg(RRMessageCommand::REQ, id, version, msgid, target, Some((format, content)))
+    pub fn create_request(version:String, msgid:Option<Vec<u8>>, target:Option<String>, format:MessageFormat, content:Vec<u8>)->Option<RRMessage>{
+        Self::build_rrmsg(RRMessageCommand::REQ, None, version, msgid, target, Some((format, content)))
     }
     pub fn create_reply(id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>, target:Option<String>, format:MessageFormat, content:Vec<u8>)->Option<RRMessage>{
         Self::build_rrmsg(RRMessageCommand::REP, id, version, msgid, target, Some((format, content)))
