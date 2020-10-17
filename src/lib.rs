@@ -81,8 +81,8 @@ impl RRMsgHandler{
         Self::build_rrmsg(RRMessageCommand::REP, id, version, msgid, target, Some((format, content)))
     }
 
-    pub fn create_error(version:String, msgid:Option<Vec<u8>>, target:Option<String>, format:MessageFormat, content:Vec<u8>)->Option<RRMessage>{
-        Self::build_rrmsg(RRMessageCommand::ERROR, None, version, msgid, target, Some((format, content)))
+    pub fn create_error(id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>, target:Option<String>, format:MessageFormat, content:Vec<u8>)->Option<RRMessage>{
+        Self::build_rrmsg(RRMessageCommand::ERROR, id, version, msgid, target, Some((format, content)))
     }
 
     pub fn build_rrmsg(cmd:RRMessageCommand, id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>, target:Option<String>, contents:Option<(MessageFormat, Vec<u8>)>)->Option<RRMessage>{
@@ -121,6 +121,7 @@ impl RRMsgHandler{
     }
 
     pub fn send_rrmeta_msg(socket:&zmq::Socket, meta: MsgMetadata, last:bool)->zmq::Result<()>{
+        debug!("send metadata {:?}", meta);
         // RR ID
         if let Some(id) = meta.identity{
             socket.send(&id, zmq::SNDMORE)?;
@@ -141,6 +142,7 @@ impl RRMsgHandler{
     }
 
     pub fn send_rrcontent_msg(socket:&zmq::Socket, content:MsgContent)->zmq::Result<()>{
+        debug!("send content {:?}", content);
         // target ID
         if let Some(tid) = content.target{
             socket.send(&tid, zmq::SNDMORE)?;
@@ -151,10 +153,11 @@ impl RRMsgHandler{
         // msg type
         let more = content.format != MessageFormat::NONE;
         let msgtype= content.format as u8;
-        socket.send(vec!(msgtype), if more {zmq::SNDMORE} else{0})?;
+        socket.send(vec![msgtype], if more {zmq::SNDMORE} else{0})?;
         
         // contents
         if more{
+            debug!("sending message content? {:?}", more);
             socket.send(content.content, 0)?;
         }
         Ok(())
@@ -310,7 +313,7 @@ impl RRMsgHandler{
 
 pub trait ZMQMessage{
     fn send_rrmsg(&self, msg:RRMessage) -> zmq::Result<()>;
-    fn receive_rrmsg(&self) -> zmq::Result<Option<RRMessage>>;
+    fn recv_rrmsg(&self) -> zmq::Result<Option<RRMessage>>;
 }
 
 impl ZMQMessage for zmq::Socket{
@@ -318,7 +321,7 @@ impl ZMQMessage for zmq::Socket{
         RRMsgHandler::send_rrmsg(&self, msg)
     }
 
-    fn receive_rrmsg(&self) -> zmq::Result<Option<RRMessage>>{
+    fn recv_rrmsg(&self) -> zmq::Result<Option<RRMessage>>{
         let mut msg_bytes = vec![0;10_000_000];
         RRMsgHandler::parse_rrmsg(self, &mut msg_bytes)
     }
