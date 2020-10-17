@@ -67,8 +67,8 @@ impl RRMsgHandler{
         Self::build_rrmsg(RRMessageCommand::DISCONNECT, None, version, msgid, None,None)
     }
 
-    pub fn create_heartbeat(id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>)->Option<RRMessage>{
-        Self::build_rrmsg(RRMessageCommand::HEARTBEAT, id, version, msgid, None, None)
+    pub fn create_heartbeat(version:String, msgid:Option<Vec<u8>>)->Option<RRMessage>{
+        Self::build_rrmsg(RRMessageCommand::HEARTBEAT, None, version, msgid, None, None)
     }
 
     pub fn create_request(version:String, msgid:Option<Vec<u8>>, target:Option<String>, format:MessageFormat, content:Vec<u8>)->Option<RRMessage>{
