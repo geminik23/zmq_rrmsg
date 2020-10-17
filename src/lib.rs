@@ -10,6 +10,7 @@ pub enum RRMessageCommand{
     HEARTBEAT,
     REQ,
     REP,
+    ERROR,
 }
 impl Default for RRMessageCommand{
     fn default() -> Self{Self::OKAY}
@@ -51,6 +52,7 @@ pub enum RRMessage{
     HEARTBEAT(MsgMetadata),
     REQ(MsgMetadata, MsgContent),
     REP(MsgMetadata, MsgContent),
+    ERROR(MsgMetadata, MsgContent),
 }
 
 pub struct RRMsgHandler;
@@ -74,8 +76,13 @@ impl RRMsgHandler{
     pub fn create_request(version:String, msgid:Option<Vec<u8>>, target:Option<String>, format:MessageFormat, content:Vec<u8>)->Option<RRMessage>{
         Self::build_rrmsg(RRMessageCommand::REQ, None, version, msgid, target, Some((format, content)))
     }
+
     pub fn create_reply(id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>, target:Option<String>, format:MessageFormat, content:Vec<u8>)->Option<RRMessage>{
         Self::build_rrmsg(RRMessageCommand::REP, id, version, msgid, target, Some((format, content)))
+    }
+
+    pub fn create_error(version:String, msgid:Option<Vec<u8>>, target:Option<String>, format:MessageFormat, content:Vec<u8>)->Option<RRMessage>{
+        Self::build_rrmsg(RRMessageCommand::ERROR, None, version, msgid, target, Some((format, content)))
     }
 
     pub fn build_rrmsg(cmd:RRMessageCommand, id:Option<Vec<u8>>, version:String, msgid:Option<Vec<u8>>, target:Option<String>, contents:Option<(MessageFormat, Vec<u8>)>)->Option<RRMessage>{
@@ -96,7 +103,7 @@ impl RRMsgHandler{
             RRMessageCommand::HEARTBEAT=>{
                 Some(RRMessage::HEARTBEAT(meta))
             },
-            RRMessageCommand::REQ| RRMessageCommand::REP=>{
+            RRMessageCommand::REQ| RRMessageCommand::REP| RRMessageCommand::ERROR=>{
                 let mut content = MsgContent{target, ..Default::default()};
                 if let Some(cont) = contents{
                     content.format = cont.0;
@@ -107,9 +114,6 @@ impl RRMsgHandler{
                 }else{
                     Some(RRMessage::REP(meta, content))
                 }
-            },
-            _=>{
-                None
             },
         }
     }
@@ -178,6 +182,10 @@ impl RRMsgHandler{
                 Self::send_rrcontent_msg(socket, content)?;
             },
             RRMessage::REP(meta, content)=>{
+                Self::send_rrmeta_msg(socket, meta, false)?;
+                Self::send_rrcontent_msg(socket, content)?;
+            },
+            RRMessage::ERROR(meta, content)=>{
                 Self::send_rrmeta_msg(socket, meta, false)?;
                 Self::send_rrcontent_msg(socket, content)?;
             },
@@ -292,6 +300,7 @@ impl RRMsgHandler{
         match cmd{
             4=>{meta.cmd = RRMessageCommand::REQ;Ok(Some(RRMessage::REQ(meta, content)))},
             5=>{meta.cmd = RRMessageCommand::REP;Ok(Some(RRMessage::REP(meta, content)))},
+            6=>{meta.cmd = RRMessageCommand::ERROR;Ok(Some(RRMessage::ERROR(meta, content)))},
             _=>{Ok(None)},
         }
     }
