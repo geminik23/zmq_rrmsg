@@ -111,8 +111,10 @@ impl RRMsgHandler{
                 }
                 if cmd == RRMessageCommand::REQ{
                     Some(RRMessage::REQ(meta, content))
-                }else{
+                }else if cmd == RRMessageCommand::REP{
                     Some(RRMessage::REP(meta, content))
+                } else{
+                    Some(RRMessage::ERROR(meta, content))
                 }
             },
         }
