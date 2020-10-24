@@ -16,7 +16,7 @@ impl Default for RRMessageCommand{
     fn default() -> Self{Self::OKAY}
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum MessageFormat{
     NONE=0,
     TEXT,
