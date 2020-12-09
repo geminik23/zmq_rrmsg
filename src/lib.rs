@@ -198,12 +198,14 @@ impl RRMsgHandler{
         Ok(())
     }
 
-    pub fn parse_rrmsg(socket:&zmq::Socket, byte:&mut Vec<u8>) -> zmq::Result<Option<RRMessage>>{
+    pub fn parse_rrmsg(socket:&zmq::Socket) -> zmq::Result<Option<RRMessage>>{
         debug!("rrmessage parsing started");
         let mut meta = MsgMetadata{..Default::default()};
 
         // 1. identity or empty frame
-        let size = socket.recv_into(byte, 0)?;
+        // let size = socket.recv_into(&byte, 0)?;
+        let mut byte = socket.recv_bytes(0)?;
+        let size = byte.len();
         // check from id or start of message
         debug!("check identity or empty frame via size {}", size );
         if size != 0{
@@ -211,12 +213,15 @@ impl RRMsgHandler{
             debug!("identity : {:?}", meta.identity);
 
             // pass first frame of reqrep msg
-            let _ = socket.recv_into(byte, 0)?;
+            // let _ = socket.recv_into(byte, 0)?;
+            byte = socket.recv_bytes(0)?;
         }
 
         // 2. protocol version
         if socket.get_rcvmore()?{
-            let size = socket.recv_into(byte, 0)?;
+            byte = socket.recv_bytes(0)?;
+            let size = byte.len();
+            // let size = socket.recv_into(byte, 0)?;
             if size != 0{ meta.version = std::str::from_utf8(&byte[..size]).unwrap().to_string();}
             debug!(" protocol version {:?}", meta.version);
         }else{
@@ -225,7 +230,9 @@ impl RRMsgHandler{
 
         // 3. RRMessage uid
         if socket.get_rcvmore()?{
-            let size = socket.recv_into(byte, 0)?;
+            byte = socket.recv_bytes(0)?;
+            let size = byte.len();
+            // let size = socket.recv_into(byte, 0)?;
             if size != 0{ meta.uid = byte[..size].to_vec(); }
             debug!(" message uid {:?}", meta.uid);
         }else{
@@ -236,7 +243,9 @@ impl RRMsgHandler{
         let mut cmd:u8 = u8::MAX;
         // 4. Command
         if socket.get_rcvmore()?{
-            let size = socket.recv_into(byte, 0)?;
+            byte = socket.recv_bytes(0)?;
+            let size = byte.len();
+            // let size = socket.recv_into(byte, 0)?;
             if size == 1{ 
                 cmd = byte[0]; 
             }
@@ -256,7 +265,9 @@ impl RRMsgHandler{
         let mut content = MsgContent{..Default::default()};
         // 5. target name
         if socket.get_rcvmore()?{
-            let size = socket.recv_into(byte, 0)?;
+            byte = socket.recv_bytes(0)?;
+            let size = byte.len();
+            // let size = socket.recv_into(byte, 0)?;
             if size != 0{
                 content.target = Some(std::str::from_utf8(&byte[..size]).unwrap().to_string());
             }
@@ -273,7 +284,9 @@ impl RRMsgHandler{
 
         // 6. RRMessage Type
         if socket.get_rcvmore()?{
-            let size = socket.recv_into(byte, 0)?;
+            byte = socket.recv_bytes(0)?;
+            let size = byte.len();
+            // let size = socket.recv_into(byte, 0)?;
             if size == 1{
                 match byte[0]{
                     1=>{content.format = MessageFormat::TEXT},
@@ -291,7 +304,9 @@ impl RRMsgHandler{
 
         // 7. BODY
         if socket.get_rcvmore()?{
-            let size = socket.recv_into(byte, 0)?;
+            byte = socket.recv_bytes(0)?;
+            let size = byte.len();
+            // let size = socket.recv_into(byte, 0)?;
             if size != 0{
                 content.content = byte[..size].to_vec();
             }
@@ -299,7 +314,9 @@ impl RRMsgHandler{
         }
 
         while socket.get_rcvmore()?{
-            let _ = socket.recv_into(byte, 0)?;
+            let _ = socket.recv_bytes(0)?;
+            // let size = byte.len();
+            // let _ = socket.recv_into(byte, 0)?;
         }
 
         match cmd{
@@ -322,8 +339,8 @@ impl ZMQMessage for zmq::Socket{
     }
 
     fn recv_rrmsg(&self) -> zmq::Result<Option<RRMessage>>{
-        let mut msg_bytes = vec![0;10_000_000];
-        RRMsgHandler::parse_rrmsg(self, &mut msg_bytes)
+        // let mut msg_bytes = vec![0;10_000_000];
+        RRMsgHandler::parse_rrmsg(self)
     }
 }
 
